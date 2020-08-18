@@ -152,7 +152,6 @@ xcn1 = 0.5
 ycn1 = 0
 # TODO Неправильно определены cos и sin. В случае вычисления нормалей в качестве угла буду использовать
 # производную от нормали
-
 cosa = (xc1 - xc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
 sina = (yc1 - yc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
 cosb = xcc / np.sqrt(xcc**2 + ycc**2)
@@ -224,3 +223,4 @@ def normal_plot(normal_coord: np.ndarray, s: float):
     # ax.plot(xs, ys, c='Magenta')
     # plt.show()
 normal_plot(normal_coord,0.01)
+edweqdqwdqwdqwdqw
