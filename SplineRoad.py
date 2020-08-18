@@ -222,5 +222,3 @@ def normal_plot(normal_coord: np.ndarray, s: float):
     # ax.plot(normal_coord, cs(normal_coord), 'o', c='Cyan')
     # ax.plot(xs, ys, c='Magenta')
     # plt.show()
-normal_plot(normal_coord,0.01)
-edweqdqwdqwdqwdqw
