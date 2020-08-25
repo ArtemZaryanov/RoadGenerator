@@ -88,13 +88,13 @@ L = cslenght(x0, xN)
 # Растояние между конусами
 l = L / count_cone
 # Координаты конусов
-#normal_coord = np.array([x0])
-#for i in range(count_cone + 1):
-#    x = normal_coord[-1]
-#    x = findX(x, l, 0.01)
-#    normal_coord = np.append(normal_coord, x)
-#print(normal_coord)
-#print("error=", error(normal_coord, L))
+normal_coord = np.array([x0])
+for i in range(count_cone + 1):
+    x = normal_coord[-1]
+    x = findX(x, l, 0.01)
+    normal_coord = np.append(normal_coord, x)
+print(normal_coord)
+print("error=", error(normal_coord, L))
 # data = pd.DataFrame({'X': xs, 'Y': cs(xs)})
 # print(data)
 # data.to_csv("data.csv")
@@ -123,57 +123,7 @@ def transform(x,y,s,c):
 def translate(x,y, xn):
     pass
 
-print(np.dot(
-    [xxn1 - xxn0, normal(xxn1, xx) - normal(xxn0, xx)],
-    [xxt1 - xxt0, tangent(xxt1, xx) - tangent(xxt0, xx)]
-))
-# fig, ax = plt.subplots(figsize=(7, 7))
-yyn0 = normal(xxn0, xx)
-yyn1 = normal(xxn1, xx)
-yyt0 = tangent(xxt0, xx)
-yyt1 = tangent(xxt1, xx)
-
-# ax.plot([xxn0, xxn1], [yyn0, yyn1], c='Red')
-# ax.plot([xxt0, xxt1], [yyt0, yyt1], c='Green')
-# ax.plot(xx,cs(xx),'o',c='Cyan')
-# plt.show()
-xc0 = 1
-yc0 = 1
-xc1 = 4
-yc1 = 8
-
-
-xcc = (xc0 + xc1) / 2
-ycc = (yc0 + yc1) / 2
-# Точки нормали
-xcn0 = -0.5
-ycn0 = 0
-xcn1 = 0.5
-ycn1 = 0
-# TODO Неправильно определены cos и sin. В случае вычисления нормалей в качестве угла буду использовать
-# производную от нормали
-cosa = (xc1 - xc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
-sina = (yc1 - yc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
-cosb = xcc / np.sqrt(xcc**2 + ycc**2)
-sinb = ycc / np.sqrt(xcc**2 + ycc**2)
-xcn0, ycn0 = transform(xcn0,ycn0,sina,cosa)
-xcn1, ycn1 = transform(xcn1,ycn1,sina,cosa)
-d = np.sqrt(xcc**2 + ycc**2)
-xcn0 = xcn0 + d*cosb
-ycn0 = ycn0 + d*sinb
-xcn1 = xcn1 + d*cosb
-ycn1 = ycn1 + d*sinb
-fig, ax = plt.subplots(figsize=(7, 7))
-ax.plot([xc0,xc1],[yc0,yc1], c='Cyan')
-ax.plot(xcn0,ycn0,'o', c='Red')
-ax.plot(xcn1,ycn1,'o', c='Red')
-ax.plot(xcc,ycc, 'o', c='Black')
-ax.grid()
-plt.show()
-
-
 def normal_plot(normal_coord: np.ndarray, s: float):
-    fig, ax = fig, ax = plt.subplots(figsize=(8, 8))
     s = 0.05
     fig, ax = plt.subplots(figsize=(7, 7))
     for i in range(30):
@@ -189,8 +139,9 @@ def normal_plot(normal_coord: np.ndarray, s: float):
         cosb = xcc / np.sqrt(xcc ** 2 + ycc ** 2)
         sinb = ycc / np.sqrt(xcc ** 2 + ycc ** 2)
         # Для поворота
-        cosa = 1/np.sqrt(1+csd1(xcc)**2)
-        sina = csd1(xcc)/np.sqrt(1+csd1(xcc)**2)
+        cosa = np.cos(np.arctan(csd1(xcc)))
+        sina = np.sin(np.arctan(csd1(xcc)))
+        d = np.sqrt(xcc ** 2 + ycc ** 2)
         # Цепочка пребразований
         # 1 Поворот на  угол a. Наш базовый отрезок теперь перпендикулярен к касательной
         xcn0, ycn0 = transform(xcn0, ycn0, sina, cosa)
@@ -200,12 +151,65 @@ def normal_plot(normal_coord: np.ndarray, s: float):
         ycn0 = ycn0 + d * sinb
         xcn1 = xcn1 + d * cosb
         ycn1 = ycn1 + d * sinb
-        ax.plot([xc0, xc1], [yc0, yc1], c='Cyan')
+        # ax.plot([xc0, xc1], [yc0, yc1], c='Cyan')
         ax.plot(xcn0, ycn0, 'o', c='Red')
         ax.plot(xcn1, ycn1, 'o', c='Red')
         ax.plot(xcc, ycc, 'o', c='Black')
     ax.grid()
     plt.show()
+
+print(np.dot(
+    [xxn1 - xxn0, normal(xxn1, xx) - normal(xxn0, xx)],
+    [xxt1 - xxt0, tangent(xxt1, xx) - tangent(xxt0, xx)]
+))
+# fig, ax = plt.subplots(figsize=(7, 7))
+# yyn0 = normal(xxn0, xx)
+# yyn1 = normal(xxn1, xx)
+# yyt0 = tangent(xxt0, xx)
+# yyt1 = tangent(xxt1, xx)
+
+# ax.plot([xxn0, xxn1], [yyn0, yyn1], c='Red')
+# ax.plot([xxt0, xxt1], [yyt0, yyt1], c='Green')
+# ax.plot(xx,cs(xx),'o',c='Cyan')
+# plt.show()
+# xc0 = 1
+# yc0 = 1
+# xc1 = 4
+# yc1 = 8
+
+
+# xcc = (xc0 + xc1) / 2
+# ycc = (yc0 + yc1) / 2
+# Точки нормали
+# xcn0 = -0.5
+# ycn0 = 0
+# xcn1 = 0.5
+# ycn1 = 0
+# TODO Неправильно определены cos и sin. В случае вычисления нормалей в качестве угла буду использовать
+# производную от нормали
+# cosa = (xc1 - xc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
+# sina = (yc1 - yc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
+# cosb = xcc / np.sqrt(xcc**2 + ycc**2)
+# sinb = ycc / np.sqrt(xcc**2 + ycc**2)
+# xcn0, ycn0 = transform(xcn0,ycn0,sina,cosa)
+# xcn1, ycn1 = transform(xcn1,ycn1,sina,cosa)
+# d = np.sqrt(xcc**2 + ycc**2)
+# xcn0 = xcn0 + d*cosb
+# ycn0 = ycn0 + d*sinb
+# xcn1 = xcn1 + d*cosb
+# ycn1 = ycn1 + d*sinb
+# fig, ax = plt.subplots(figsize=(7, 7))
+# ax.plot([xc0,xc1],[yc0,yc1], c='Cyan')
+# ax.plot(xcn0,ycn0,'o', c='Red')
+#ax.plot(xcn1,ycn1,'o', c='Red')
+# ax.plot(xcc,ycc, 'o', c='Black')
+# ax.grid()
+# plt.show()
+
+
+
+
+normal_plot(normal_coord, s=0.001)
 
     # xxn0 = normal_coord - d
     # xxn1 = normal_coord + d
