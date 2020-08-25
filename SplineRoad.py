@@ -16,7 +16,7 @@ def plotSpline(xd, yd, xt, yt, xs, ys):
     plt.show()
 
 
-def function(x): return np.sin(0.4 * x)
+def function(x): return np.cos(0.5 * x)
 
 
 def csd1(x): return cs.derivative(1)(x)
@@ -38,7 +38,6 @@ def findX(x0, l, epsilon):
         start += h
     return start
 
-
 # Проверка на длину. Просто так
 def error(coord: np.ndarray, L):
     L_buf = 0
@@ -47,10 +46,28 @@ def error(coord: np.ndarray, L):
     return np.abs(L_buf - L)
 
 
+def equalSpaceCone(start, end, count_cone):
+    # Начало и конец
+    x0 = start
+    xN = end
+    # Длина кривой
+    L = cslenght(x0, xN)
+    # Растояние между конусами
+    l = L / count_cone
+    # Координаты конусов
+    normal_coord = np.array([x0])
+    for i in range(count_cone + 1):
+        x = normal_coord[-1]
+        x = findX(x, l, 0.01)
+        normal_coord = np.append(normal_coord, x)
+    e = error(normal_coord, L)
+    return normal_coord, e
+
+
+
 # Построение нормали
 
 def cone_locate():
-#TODO
     cone_coord = np.array()
     return cone_coord
 
@@ -73,38 +90,39 @@ xd = np.linspace(1, 10, count_data)
 yd = function(xd)  # function
 cs = interpolate.CubicSpline(xd, yd)
 xs = np.linspace(1, 10, count_point)
-ys = cs(xs)
+#ys = cs(xs)
 # TODO Без цикла
 
 
 # TODO  проверка на общую длину
 # Число конусов
-count_cone = 40
+count_cone = 70
 # Начало и конец
-x0 = xs[0]
-xN = xs[-1]
+#x0 = xs[0]
+#xN = xs[-1]
 # Длина кривой
-L = cslenght(x0, xN)
+# L = cslenght(x0, xN)
 # Растояние между конусами
-l = L / count_cone
+# l = L / count_cone
 # Координаты конусов
-normal_coord = np.array([x0])
-for i in range(count_cone + 1):
-    x = normal_coord[-1]
-    x = findX(x, l, 0.01)
-    normal_coord = np.append(normal_coord, x)
+# normal_coord = np.array([x0])
+# for i in range(count_cone + 1):
+#    x = normal_coord[-1]
+#    x = findX(x, l, 0.01)
+#    normal_coord = np.append(normal_coord, x)
+normal_coord, errorlenght = equalSpaceCone(xs[0], xs[-1], count_cone)
 print(normal_coord)
-print("error=", error(normal_coord, L))
+print("error=", errorlenght)
 # data = pd.DataFrame({'X': xs, 'Y': cs(xs)})
 # print(data)
 # data.to_csv("data.csv")
-xx = 1
-xxn0 = xx - 0.001
-xxn1 = xx + 0.001
-xxt0 = xx - 0.001
-xxt1 = xx + 0.001
-yycs = cs(xx)
-yycsd1 = csd1(xx)
+# xx = 1
+# xxn0 = xx - 0.001
+# xxn1 = xx + 0.001
+# xxt0 = xx - 0.001
+# xxt1 = xx + 0.001
+# yycs = cs(xx)
+# yycsd1 = csd1(xx)
 
 
 # TODO Разница между концами векторами мы их переводим в нормальный
@@ -123,10 +141,11 @@ def transform(x,y,s,c):
 def translate(x,y, xn):
     pass
 
+
 def normal_plot(normal_coord: np.ndarray, s: float):
     s = 0.05
     fig, ax = plt.subplots(figsize=(7, 7))
-    for i in range(30):
+    for i in range(count_cone):
         # Точки нормали
         xcn0 = -s
         ycn0 = 0
@@ -158,71 +177,5 @@ def normal_plot(normal_coord: np.ndarray, s: float):
     ax.grid()
     plt.show()
 
-print(np.dot(
-    [xxn1 - xxn0, normal(xxn1, xx) - normal(xxn0, xx)],
-    [xxt1 - xxt0, tangent(xxt1, xx) - tangent(xxt0, xx)]
-))
-# fig, ax = plt.subplots(figsize=(7, 7))
-# yyn0 = normal(xxn0, xx)
-# yyn1 = normal(xxn1, xx)
-# yyt0 = tangent(xxt0, xx)
-# yyt1 = tangent(xxt1, xx)
-
-# ax.plot([xxn0, xxn1], [yyn0, yyn1], c='Red')
-# ax.plot([xxt0, xxt1], [yyt0, yyt1], c='Green')
-# ax.plot(xx,cs(xx),'o',c='Cyan')
-# plt.show()
-# xc0 = 1
-# yc0 = 1
-# xc1 = 4
-# yc1 = 8
-
-
-# xcc = (xc0 + xc1) / 2
-# ycc = (yc0 + yc1) / 2
-# Точки нормали
-# xcn0 = -0.5
-# ycn0 = 0
-# xcn1 = 0.5
-# ycn1 = 0
-# TODO Неправильно определены cos и sin. В случае вычисления нормалей в качестве угла буду использовать
-# производную от нормали
-# cosa = (xc1 - xc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
-# sina = (yc1 - yc0)/(np.sqrt((xc0-xc1)**2 + (yc0-yc1)**2))
-# cosb = xcc / np.sqrt(xcc**2 + ycc**2)
-# sinb = ycc / np.sqrt(xcc**2 + ycc**2)
-# xcn0, ycn0 = transform(xcn0,ycn0,sina,cosa)
-# xcn1, ycn1 = transform(xcn1,ycn1,sina,cosa)
-# d = np.sqrt(xcc**2 + ycc**2)
-# xcn0 = xcn0 + d*cosb
-# ycn0 = ycn0 + d*sinb
-# xcn1 = xcn1 + d*cosb
-# ycn1 = ycn1 + d*sinb
-# fig, ax = plt.subplots(figsize=(7, 7))
-# ax.plot([xc0,xc1],[yc0,yc1], c='Cyan')
-# ax.plot(xcn0,ycn0,'o', c='Red')
-#ax.plot(xcn1,ycn1,'o', c='Red')
-# ax.plot(xcc,ycc, 'o', c='Black')
-# ax.grid()
-# plt.show()
-
-
-
 
 normal_plot(normal_coord, s=0.001)
-
-    # xxn0 = normal_coord - d
-    # xxn1 = normal_coord + d
-    # xxt0 = normal_coord - d
-    # xxt1 = normal_coord + d
-    # yyn0 = normal(xxn0, normal_coord)
-    # yyn1 = normal(xxn1, normal_coord)
-    # yyt0 = tangent(xxt0, normal_coord)
-    # yyt1 = tangent(xxt1, normal_coord)
-    # xs = np.linspace(1, 10, count_point)
-    # ys = cs(xs)
-    # ax.plot([xxn0, xxn1], [yyn0, yyn1], c='Red')
-    # ax.plot([xxt0, xxt1], [yyt0, yyt1], c='Green')
-    # ax.plot(normal_coord, cs(normal_coord), 'o', c='Cyan')
-    # ax.plot(xs, ys, c='Magenta')
-    # plt.show()
