@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.interpolate as interpolate
 import scipy.integrate as integrate
+import pandas as pd
+import subprocess
+import os
 
 
 def plotSpline(xd, yd, xt, yt, xs, ys):
@@ -13,7 +16,7 @@ def plotSpline(xd, yd, xt, yt, xs, ys):
     plt.show()
 
 
-def function(x: float): return x * x  # np.cos(0.5 * x)+np.sin(x)
+def function(x: float): return np.cos(0.5 * x)+np.sin(x)
 
 
 def csd1(x: float): return cs.derivative(1)(x)
@@ -26,6 +29,14 @@ def cslf(x: float): return np.sqrt(csd1(x) ** 2 + 1)
 def cslenght(a, b): return integrate.quad(cslf, a, b)[0]
 
 
+# Проверка на длину. Просто так
+def error(coord: np.ndarray, L):
+    L_buf = 0
+    for i in range(len(coord) - 1):
+        L_buf += cslenght(coord[i], coord[i + 1])
+    return np.abs(L_buf - L)
+
+
 def findX(x0, l, epsilon):
     h = 0.001
     lcalc = 0.0
@@ -34,14 +45,6 @@ def findX(x0, l, epsilon):
         lcalc = cslenght(x0, start + h)
         start += h
     return start
-
-
-# Проверка на длину. Просто так
-def error(coord: np.ndarray, L):
-    L_buf = 0
-    for i in range(len(coord) - 1):
-        L_buf += cslenght(coord[i], coord[i + 1])
-    return np.abs(L_buf - L)
 
 
 def equalSpaceCone(start, end, count_cone, epsilon):
@@ -84,11 +87,10 @@ def translate(x, y, xn):
     pass
 
 
-def normal_plot(normal_coord: np.ndarray, s: float):
-    fig, ax = plt.subplots(figsize=(7, 7))
-    lc = np.array([])
-    rc = np.array([])
-    for i in range(count_cone):
+def cone_coord(normal_coord: np.ndarray, s):
+    lc = []
+    rc = []
+    for i in range(normal_coord.size):
         # Точки нормали
         xcn0 = -s
         ycn0 = 0
@@ -113,15 +115,13 @@ def normal_plot(normal_coord: np.ndarray, s: float):
         ycn0 = ycn0 + d * sinb
         xcn1 = xcn1 + d * cosb
         ycn1 = ycn1 + d * sinb
-        lc = np.append(lc, np.array([[xcn0, ycn0]]))
-        rc = np.append(rc, np.array([[xcn1, ycn1]]))
-        ax.plot(xs, cs(xs), c='Black')
-        ax.plot(xcn0, ycn0, 'o', c='Red')
-        ax.plot(xcn1, ycn1, 'o', c='Red')
-        ax.plot(xcc, ycc, 'o', c='Black')
-    ax.grid()
-    plt.show()
-    return lc, rc
+        lc.append([xcn0, ycn0])
+        rc.append([xcn1, ycn1])
+    return np.array(lc), np.array(rc)
+
+
+def plot_test(left_cone, right_cone, normal_coord, spline_coord):
+    pass
 
 
 # Для построения нормали к поверхности используется метод Ньютона.
@@ -133,20 +133,37 @@ def normal_plot(normal_coord: np.ndarray, s: float):
 count_data = 10
 count_point = 50
 epsilon = 0.01
-count_cone = 70
+count_cone = 20
+# Расстояние между двумя конусами
+s = 0.1
 xd = np.linspace(1, 10, count_data)
 yd = function(xd)  # function
 cs = interpolate.CubicSpline(xd, yd)
 xs = np.linspace(1, 10, count_point)
 # TODO  проверка на общую длину
 normal_coord, error_lenght = equalSpaceCone(xs[0], xs[-1], count_cone, epsilon)
-print(normal_coord)
-print("error=", error_lenght)
+# print(normal_coord)
+# print("error=", error_lenght)
+left_cone, right_cone = cone_coord(normal_coord, s)
+data_left_cone = pd.DataFrame({'X': left_cone[:, 0], 'Y': left_cone[:, 1]})
+data_right_cone = pd.DataFrame({'X': right_cone[:, 0], 'Y': right_cone[:, 1]})
+print(data_left_cone)
+print(data_right_cone)
+data_left_cone.to_csv("data_left_cone.csv")
+data_right_cone.to_csv("data_right_cone.csv")
+path_from = os.getcwd() + "\\*.csv "
+path_to = "D:\\Users\\user\\Documents\\Course\\MyProject2\\Content"
+cmd = "copy" + " " + path_from + " " + path_to + "/y"
+print(cmd)
+returned_output = subprocess.check_output(cmd,shell=True) # returned_output содержит вывод в виде строки байтов
 
-# data = pd.DataFrame({'X': xs, 'Y': cs(xs)})
-# print(data)
-# data.to_csv("data.csv")
+print('Результат выполнения команды:', returned_output.decode("CP866")) # Преобразуем байты в строку
 
-left_cone, right_cone = normal_plot(normal_coord, s=1)
-print(left_cone)
-print(right_cone)
+fig, ax = plt.subplots(figsize=(5, 5))
+xx = np.linspace(1, 10, 200)
+ax.plot(xx, cs(xx), label='True spline')
+ax.plot(left_cone,'o',c='Red')
+ax.plot(right_cone,'o',c='Black')
+ax.plot(normal_coord, cs(normal_coord),'o', c='Green')
+plt.show()
+print(np.mean(np.sqrt(np.square(left_cone[:,0] - right_cone[:,0]) +np.square(left_cone[:,1] - right_cone[:,1]))))
