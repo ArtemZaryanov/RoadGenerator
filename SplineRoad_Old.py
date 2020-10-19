@@ -16,7 +16,7 @@ def plotSpline(xd, yd, xt, yt, xs, ys):
     plt.show()
 
 
-def function(x: float): return x*x
+def function(x: float): return x**2
 
 
 def csd1(x: float): return cs.derivative(1)(x)
@@ -134,16 +134,19 @@ count_data = 10
 count_point = 50
 epsilon = 0.01
 count_cone = 20
+start = 1
+end  = 10000
 # Расстояние между двумя конусами
-s = 100
-xd = np.linspace(1, 100, count_data)
-yd = function(xd)  # function
+s = 400
+xd = np.linspace(start, end, count_data)
+yd = end*function(xd/end)  # function
 cs = interpolate.CubicSpline(xd, yd)
-xs = np.linspace(1, 100, count_point)
+xs = np.linspace(start, end, count_point)
 # TODO  проверка на общую длину
-normal_coord = np.linspace(1, 100, count_cone)
+normal_coord = np.linspace(start, end, count_cone)
 # print(normal_coord)
 # print("error=", error_lenght)
+
 left_cone, right_cone = cone_coord(normal_coord, s)
 data_left_cone = pd.DataFrame({'X': left_cone[:, 0], 'Y': left_cone[:, 1]})
 data_right_cone = pd.DataFrame({'X': right_cone[:, 0], 'Y': right_cone[:, 1]})
