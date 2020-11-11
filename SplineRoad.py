@@ -10,9 +10,9 @@ import os
 def _function(x):
     a = 1000
     b = 10000
-    return np.sqrt(x * x + (40000 - 1000) ** 2) - 40000 - 1000 + 2000
-
-
+    return x + 1000*np.sin(0.0005*x)
+    # return x*np.exp(-0.00004*x)
+    #return np.sqrt(x * x + (40000 - 1000) ** 2) - 40000 - 1000 + 2000
 # return 500 * np.a(np.sin(x * 0.0005) + np.cos(x * 0.0009))
 def _spline(x):
     pass
@@ -32,15 +32,16 @@ def get_function():
 
 # Решается задача оптимизации расстояния до кривой. В итоге получем нелинейное алг.уравнение относительно
 # координаты x(длина нормали)
-def distance_to_point(x0, y0):
-    rho = lambda x: np.sqrt((x - x0) ** 2 + (_function(x) - y0) ** 2)
-    _x = minimize(rho, x0).x
-    return rho(_x)
+def distance_to_point(position):
+    #x0,y0,z0 = position
+    rho = lambda x: np.sqrt((x - position[0]) ** 2 + (_function(x) - position[1]) ** 2)
+    _x = minimize(rho, position[0]).x
+    return rho(_x), _x
 
 
 class FunctionRoad:
 
-    def __init__(self, s=400, start=0, end=40000, count_cone=100):
+    def __init__(self, s=700, start=0, end=40000, count_cone=100):
         self.s = s
         self.start = start
         self.end = end

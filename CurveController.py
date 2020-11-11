@@ -16,23 +16,41 @@
 Нельзя и двигаться постоянно. Нужен контроль скоростию Ввод оптимальной скорости. Подбор силы и времени тромоза, чтобы скорость упала к следующим итерациям  или эе ввод передач
 """
 
-
 # Если возникнут проблемы https://github.com/microsoft/AirSim/pull/2243
-import  numpy as np
+import numpy as np
+
+
 class Controller:
 
-    def __init__(self,kProportional,kIntegral=0):
-        self._kp= kProportional
+    def __init__(self, kProportional=0, kDerivative=0, kIntegral=0):
+        self._kp = kProportional
+        self._kd = kDerivative
         self._ki = kIntegral
 
     # error -отклонение от трассы
     # Подаем на вход steering, throttle
     # Получем их исправленные значения
-    def PIDController(self, steering, throttle, e, de=0):
-        # return (e*self._kProportional + 1)*steering
-        return 0, throttle + (self._kp*e)
-    def getControllerParams(self):
-        return self._kProportional
+    def PIDController(self,e=0, de=0,ie=0):
+        """ return correct"""
+        correct = self.kp*e + self.kp*self._kd*de + self.kp*self._ki*ie
+        return correct
 
-    def setControllerParams(self, value):
-        self._kProportional = value
+
+
+
+    def getControllerParams(self):
+        return self._kp,self._kd,self._ki
+
+    def setControllerParams(self,kp,kd,ki):
+        self._kp = kp
+        self._kd = kd
+        self._ki = ki
+
+
+
+class VelocityControl:
+    pass
+
+
+class CurveControl:
+    pass
