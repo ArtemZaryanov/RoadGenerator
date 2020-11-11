@@ -30,7 +30,7 @@ class Controller:
     # error -отклонение от трассы
     # Подаем на вход steering, throttle
     # Получем их исправленные значения
-    def PIDController(self,e=0, de=0,ie=0):
+    def PIDController(self,e=0.0, de=0.0,ie=0.0):
         """ return correct"""
         correct = self.kp*e + self.kp*self._kd*de + self.kp*self._ki*ie
         return correct

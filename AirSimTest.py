@@ -68,9 +68,9 @@ def generate_track(return_function = False):
     FR.generate_data()
     FR.move_data() #Потом убрать
     if return_function:
-        return SR.get_function(), _,_
+        return SR.get_function(), None
     else:
-        return _,_
+        return None
 
 # Вывод графиков
 def plot_g(positions):
@@ -114,13 +114,71 @@ def plot_g(positions):
 
 # Возврат в начальное состояние и установка автомобиля
 # По направлению нормали к трассе
-def reset_environment(client,RoadFunction):
-    pass
-    # client.
+def reset_environment(client,RoadFunction=None):
+        client.reset()
 
 
-def Twiddle(e):
-    pass
+def CarState(client):
+    State = client.getCarState()
+    pos = State.kinematics_estimated.position.to_numpy_array()
+    velocity = State.speed
+    kinematics_estimated = State.kinematics_estimated.position
+    return pos, velocity, kinematics_estimated
+
+
+def SimMove(t,s,client):
+    car_controls.throttle = t
+    car_controls.steering = s
+    client.setCarControls(car_controls)
+    time.sleep(delta)
+
+def A(kP,kD,kI,client):
+    # Установили параметры
+    speed_controller.setControllerParams(kP, kD, kI)
+    _,v0,_=CarState(client)
+    # Получаем steering и throttle
+    e_velocity_p = velocity_control(v0, min_velocity, max_velocity)
+    correction_v = speed_controller.PIDController(e_velocity_p)
+    throttle = client.getCarControls().throttle * (1 + correction_v)
+    if throttle > 1:
+        throttle = 1
+    steering = client.getCarControls().steering
+    #TODO Доделать Twiddle алгоритм для контролерра скорости
+
+
+
+def Twiddle(kP,kD,kI):
+    # Choose an initialization parameter vector
+    p = [kP,kD,kI]
+    # Define potential changes
+    dp = [1, 1, 1]
+    # Calculate the error
+    best_err = Sim(p)
+
+    threshold = 0.001
+
+    while sum(dp) > threshold:
+
+        for i in range(len(p)):
+            p[i] += dp[i]
+            err = Sim(p)
+
+            if err < best_err:  # There was some improvement
+                best_err = err
+                dp[i] *= 1.1
+            else:  # There was no improvement
+                p[i] -= 2 * dp[i]  # Go into the other direction
+                err = Sim(p)
+
+                if err < best_err:  # There was an improvement
+                    best_err = err
+                    dp[i] *= 1.05
+                else:  # There was no improvement
+                    p[i] += dp[i]
+                    # As there was no improvement, the step size in either
+                    # direction, the step size might simply be too big.
+                    dp[i] *= 0.95
+
 # TODO Добавить генератор трасс и получить его нормали. Для визуализации можно использовать просто matplotlib,
 #  а UE4 использовать только для демонтрации проекта
 # generate_track()
@@ -168,7 +226,7 @@ is_curve_control = False
 t0 = time.time()
 
 
-
+""""
 linear_accel = []
 ang_accel = []
 accel = []
@@ -179,28 +237,19 @@ trottles = np.array([[0,car_controls.throttle]])
 steerings = np.array([[0,car_controls.steering]])
 error_lenght_prev,_ =SR.distance_to_point(client.getCarState().kinematics_estimated.position.to_numpy_array())
 errors_lenght = np.array([[error_lenght_prev]])
-
+"""
 while True:
-    posAgent = client.getCarState().kinematics_estimated.position.to_numpy_array()
-    speedAgent = client.getCarState().speed
+
+    posAgent, speedAgent = CarState(client)
     if client.simGetCollisionInfo().has_collided:
-        kp = kp + 0.01
-        client.reset()
+        reset_environment(client)
+
     if not client.simIsPause():
-        client.setCarControls(car_controls)
-        time.sleep(delta)
-
-
+        SimMove(throttle,steering)
+        Twiddle(kp_velocity, kd_velocity, ki_velocity)
         if is_velocity_control:
-            e_velocity_p = velocity_control(speedAgent,min_velocity,max_velocity)
-            correction_v = PID_Controller.PIDController(kp,error_p)
-            if throttle>1:
-                throttle = 1
-            if e_velocity_p>best_error_v_p:
-
-            car_controls.throttle = throttle
-            velocity = np.append(velocity,[[time.time() - t0,speedAgent]],axis=0)
-            trottles = np.append(trottles, [[time.time() - t0, car_controls.throttle]], axis=0)
+            # velocity = np.append(velocity,[[time.time() - t0,speedAgent]],axis=0)
+            # trottles = np.append(trottles, [[time.time() - t0, car_controls.throttle]], axis=0)
 
             # print(f"error={error}, throttle={throttle}, time={time.time()}")
             # print(velocity)
