@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from scipy.misc import derivative
 from scipy.optimize import minimize
+from scipy.optimize import minimize_scalar
 import numpy as np
 import pandas as pd
 import subprocess
@@ -9,8 +10,12 @@ import os
 
 def _function(x):
     a = 1000
-    b = 10000
-    return x + 1000*np.sin(0.0005*x)
+    b = 0.001
+    return x + a*np.sin(b*x)
+def _derfunction(x):
+    a = 1000
+    b = 0.0005
+    return 1 + a*b* np.cos(b * x)
     # return x*np.exp(-0.00004*x)
     #return np.sqrt(x * x + (40000 - 1000) ** 2) - 40000 - 1000 + 2000
 # return 500 * np.a(np.sin(x * 0.0005) + np.cos(x * 0.0009))
@@ -34,10 +39,24 @@ def get_function():
 # координаты x(длина нормали)
 def distance_to_point(position):
     #x0,y0,z0 = position
-    rho = lambda x: np.sqrt((x - position[0]) ** 2 + (_function(x) - position[1]) ** 2)
-    _x = minimize(rho, position[0]).x
-    return rho(_x), _x
+    rho = lambda x: (x - position[0]*100) ** 2 + (_function(x) - position[1]*100) ** 2
+    _x = minimize(rho, position[0], tol=1e-9).x[0]
+    return np.sqrt(rho(_x )), _x
 
+
+
+
+def distance_to_point_l(position):
+    #x0,y0,z0 = position
+    rho = lambda x: (x - position[0]*100) ** 2 + (_function(x)-350 - position[1]*100) ** 2
+    _x = minimize(rho, position[0], tol=1e-9).x[0]
+    return np.sqrt(rho(_x )), _x
+
+def distance_to_point_r(position):
+    #x0,y0,z0 = position
+    rho = lambda x: (x - position[0]*100) ** 2 + (_function(x)+350 - position[1]*100) ** 2
+    _x = minimize(rho, position[0], tol=1e-9).x[0]
+    return np.sqrt(rho(_x )), _x
 
 class FunctionRoad:
 
@@ -47,6 +66,7 @@ class FunctionRoad:
         self.end = end
         self.count_cone = count_cone
         self.xxc = None
+        self.yyc = None
         self.lcx = None
         self.lcy = None
         self.rcx = None
@@ -59,8 +79,8 @@ class FunctionRoad:
     def plot_cones(self, plot_func: bool = True, accuracy: int = 200):
         assert self.is_generated_data == True, "no data is generated"
         xx = np.linspace(self.start, self.end, accuracy)
-        yy1 = _function(xx) + self.s
-        yy2 = _function(xx) - self.s
+        yy1 = _function(xx) + self.s/2
+        yy2 = _function(xx) - self.s/2
         yy = _function(xx)
         if plot_func:
             plt.plot(xx, yy1, c='Black')
@@ -81,6 +101,7 @@ class FunctionRoad:
         # В UnrealEngine4 в см
         # Конусы
         self.xxc = np.linspace(self.start, self.end, self.count_cone)[1::]
+        self.ycc = _function(self.xxc)
         deriv = derivative(_function, self.xxc)
         self.lcx = self.xxc + _koefx(self.s, self.xxc, deriv)
         self.lcy = _function(self.xxc) + _coef_y(self.s, self.xxc, deriv)
@@ -93,8 +114,10 @@ class FunctionRoad:
         assert self.is_generated_data == True, "no data is generated"
         data_left_cone = pd.DataFrame({'X': self.lcx, 'Y': self.lcy})
         data_right_cone = pd.DataFrame({'X': self.rcx, 'Y': self.rcy})
+        data_central =    pd.DataFrame({'X':self.xxc, 'Y':self.ycc})
         data_left_cone.to_csv("data_left_cone.csv")
         data_right_cone.to_csv("data_right_cone.csv")
+        data_central.to_csv("data_central.csv")
         path_from = os.getcwd() + "\\*.csv "
         path_to = "D:\\Users\\user\\Documents\\Course\\MyProject2\\Content"
         cmd = "copy" + " " + path_from + " " + path_to + "/y"
