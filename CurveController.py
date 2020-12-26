@@ -45,13 +45,20 @@ class Controller:
         self._kd = kd
         self._ki = ki
 
+    def CarState(self, client):
+        State = client.getCarState()
+        pos = State.kinematics_estimated.position.to_numpy_array()
+        velocity = State.speed
+        kinematics_estimated = State.kinematics_estimated
+        return pos, velocity, kinematics_estimated
+
 
 class VelocityControl(Controller):
-    def __init__(self,e0,v0,error_velocity_0):
+    def __init__(self,e0,v0,error_velocity_i_0):
         super().__init__()
         self.e0 = e0
         self.v0 = v0
-        self.errors_velocity_i = [error_velocity_0]
+        self.errors_velocity_i = [error_velocity_i_0]
 
     def e_velocity_p(self,v: float, v_min: float, v_max: float):
         v_mm_half = (v_min + v_max) / 2
@@ -112,10 +119,3 @@ class CurveControl(Controller):
             buff = erros_curve_i[-1]
             erros_curve_i = [buff]
         return sum(erros_curve_i) * delta
-
-    def CarState(self, client):
-        State = client.getCarState()
-        pos = State.kinematics_estimated.position.to_numpy_array()
-        velocity = State.speed
-        kinematics_estimated = State.kinematics_estimated
-        return pos, velocity, kinematics_estimated
