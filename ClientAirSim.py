@@ -6,9 +6,13 @@ import numpy as np
 import pandas as pd
 import SplineRoad as SR
 import CurveController as Controller
+from Driver import Driver
+import matplotlib.pyplot as plt
+from PIL import Image
 import keyboard
 import os
-
+import warnings
+warnings.simplefilter("ignore", DeprecationWarning)
 
 # Генерация трассы
 def generate_track(return_function=False):
@@ -116,9 +120,12 @@ print(client.isApiControlEnabled())
 
 # Пути к файлам
 path_project = "D:/Users/user/PycharmProjects/RoadGenerator/"
+path_model  = "D:/Users/user/PycharmProjects/RoadGenerator/"
 # Параметры симулятора
 delta = 0.01
-
+# Driver
+SimpleCNN = Driver()
+SimpleCNN.model_CNN_init(path_model + "SimpleCNN")
 # PID регуляторы
 # Трасса
 kp_curve = 0
@@ -144,6 +151,18 @@ PID_Velocity = Controller.VelocityControl(e0_velocity, v0, error_velocity_i_0)
 car_controls = client.getCarControls("PhysXCar")
 
 
+# Получить изображение с камеры. Возвращает numpy массив
+def get_sim_image(client):
+    responses = client.simGetImages([
+        airsim.ImageRequest(0, airsim.ImageType.Segmentation, False, False)])
+    # print("Type %d, size %d" % (responses[0].image_type, len(responses[0].image_data_uint8)))
+    img1d = np.fromstring(responses[0].image_data_uint8, dtype=np.uint8)
+
+    # reshape array to 4 channel image array H X W X 4
+    img_rgb = img1d.reshape(responses[0].height, responses[0].width, 3)
+    return img_rgb
+
+
 # Проехать по уже известным steering и throttle
 def read_true_input(path_project, file_name):
     return pd.read_csv(path_project + file_name)
@@ -159,6 +178,7 @@ def move_on_true_input(true_input, client, car_controls, delta):
     SimMove(0, 0, client, car_controls, delta)
 
 
+
 true_input = read_true_input(path_project, "true_input.csv")
 # SimMove(1, 0, client, delta)
 time.sleep(1)
@@ -167,7 +187,13 @@ time.sleep(1)
 while True:
     # print(kp_velocity, kd_velocity, ki_velocity)
     # posAgent, speedAgent, _ = CarState(client)
-    move_on_true_input(true_input, client, car_controls, 0.05)
+    # move_on_true_input(true_input, client, car_controls, 0.05)
+    # get camera images from the car
+
+    steering = SimpleCNN.Control_CNN(get_sim_image(client))
+    SimMove(1,steering,client,car_controls,0.01)
+    # get camera images from the car
+    # airsim.write_file('py1.png', responses[0].image_data_float)
     break
 """
     if client.simGetCollisionInfo().has_collided:

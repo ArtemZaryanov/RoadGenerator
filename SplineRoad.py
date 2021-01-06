@@ -11,11 +11,13 @@ import os
 def _function(x):
     a = 1000
     b = 0.001
+    #func = lambda x: (sum([np.sin(x * 3) * x ** j for j in range(1, 10)]))
+    # return func(x)
     return x + a*np.sin(b*x)
-def _derfunction(x):
-    a = 1000
-    b = 0.0005
-    return 1 + a*b* np.cos(b * x)
+#def _derfunction(x):
+#    a = 1000
+ #   b = 0.001
+    # return 1 + a*b* np.cos(b * x)
     # return x*np.exp(-0.00004*x)
     #return np.sqrt(x * x + (40000 - 1000) ** 2) - 40000 - 1000 + 2000
 # return 500 * np.a(np.sin(x * 0.0005) + np.cos(x * 0.0009))
@@ -79,9 +81,9 @@ class FunctionRoad:
     def plot_cones(self, plot_func: bool = True, accuracy: int = 200):
         assert self.is_generated_data == True, "no data is generated"
         xx = np.linspace(self.start, self.end, accuracy)
-        yy1 = _function(xx) + self.s/2
-        yy2 = _function(xx) - self.s/2
         yy = _function(xx)
+        yy1 = yy + self.s/2
+        yy2 = yy - self.s/2
         if plot_func:
             plt.plot(xx, yy1, c='Black')
             plt.plot(xx, yy2, c='Black')
@@ -112,9 +114,9 @@ class FunctionRoad:
             return np.array([[self.lcx,self.lcy],[self.rcx,self.rcy]]),np.array([self.xxc,_function(self.xxc)])
     def move_data(self):
         assert self.is_generated_data == True, "no data is generated"
-        data_left_cone = pd.DataFrame({'X': self.lcx, 'Y': self.lcy})
-        data_right_cone = pd.DataFrame({'X': self.rcx, 'Y': self.rcy})
-        data_central =    pd.DataFrame({'X':self.xxc, 'Y':self.ycc})
+        data_left_cone = pd.DataFrame({'X': self.lcx, 'Y': self.lcy, 'isPhysics': False})
+        data_right_cone = pd.DataFrame({'X': self.rcx, 'Y': self.rcy, 'isPhysics': False})
+        data_central =    pd.DataFrame({'X':self.xxc, 'Y':self.ycc, 'isPhysics': False})
         data_left_cone.to_csv("data_left_cone.csv")
         data_right_cone.to_csv("data_right_cone.csv")
         data_central.to_csv("data_central.csv")
